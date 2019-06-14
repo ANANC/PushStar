@@ -1,0 +1,32 @@
+{
+    "m_SceneRects": [
+        {
+            "serializedVersion": "2",
+            "x": 481.0,
+            "y": 449.5,
+            "width": 768.0,
+            "height": 10.0
+        },
+        {
+            "serializedVersion": "2",
+            "x": 481.0,
+            "y": 73.5,
+            "width": 768.0,
+            "height": 10.0
+        },
+        {
+            "serializedVersion": "2",
+            "x": 102.0,
+            "y": 261.5,
+            "width": 10.0,
+            "height": 386.0
+        },
+        {
+            "serializedVersion": "2",
+            "x": 865.0,
+            "y": 261.5,
+            "width": 10.0,
+            "height": 386.0
+        }
+    ]
+}
