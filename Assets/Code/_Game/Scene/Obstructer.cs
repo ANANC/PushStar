@@ -14,17 +14,135 @@ public class Obstructer
         }
     }
 
+    public struct Rect
+    {
+        private Vector2 m_Position;
+        private float m_Width;
+        private float m_Height;
+        private Vector2 m_Size;
+        private Vector2 m_Radius;
+
+        public Rect(Vector2 position, Vector2 size)
+        {
+            m_Position = position;
+            m_Size = size;
+            m_Radius = size / 2;
+            m_Width = size.x;
+            m_Height = size.y;
+        }
+
+        public Vector2 position
+        {
+            get { return m_Position; }
+            set { m_Position = value; }
+        }
+
+        public float width
+        {
+            get { return m_Width; }
+        }
+
+        public float height
+        {
+            get { return m_Height; }
+        }
+
+        public Vector2 size
+        {
+            get { return m_Size; }
+            set
+            {
+                m_Size = size;
+                m_Radius = m_Size / 2;
+                m_Width = m_Size.x;
+                m_Height = m_Size.y;
+            }
+        }
+
+        public Vector2 radius
+        {
+            get { return m_Radius; }
+            set { size = value * 2; }
+        }
+
+        public Vector2 min
+        {
+            get { return m_Position + new Vector2(-m_Radius.x, m_Radius.y); }
+        }
+
+        public Vector2 max
+        {
+            get { return m_Position + new Vector2(m_Radius.x, -m_Radius.y); }
+        }
+
+        public Vector2 center
+        {
+            get { return m_Position; }
+        }
+
+        public line[] boxLines
+        {
+            get
+            {
+                Vector2 curMin = min;
+                Vector2 curMax = max;
+
+                line[] lines = new line[]
+                {
+                    new line(curMin, m_Size.x, 0),
+                    new line(curMax, -m_Size.x, 0),
+                    new line(curMin, 0, -m_Size.y),
+                    new line(curMax, 0, m_Size.y),
+
+                };
+
+                return lines;
+            }
+        }
+
+        public bool Overlaps(Rect other)
+        {
+            Vector2 curMin = min;
+            Vector2 curMax = max;
+            Vector2 otherMin = other.min;
+            Vector2 otherMax = other.max;
+
+
+            if (((otherMin.x >= curMin.x && otherMin.x <= curMax.x) && (otherMin.y <= min.y && otherMin.y >= max.y)) ||
+                ((otherMax.x <= curMax.x && otherMax.x >= curMin.x) &&
+                 (otherMax.y >= curMax.y && otherMax.y <= curMin.y)))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public void DrawBox()
+        {
+            DrawBox(Color.blue);
+        }
+
+        public void DrawBox(Color color)
+        {
+            for (int index = 0; index < boxLines.Length; index++)
+            {
+                line curLine = boxLines[index];
+                Debug.DrawLine(curLine.start, curLine.end, color);
+            }
+        }
+    }
+
     public GameObject gameObject;
     public Transform transform;
     public RectTransform rectTransform;
-    
+
     public Obstructer(Transform target)
     {
         transform = target;
         rectTransform = transform.rectTransform();
         gameObject = transform.gameObject;
     }
-    
 
     private Vector2[] m_BoxPosition;
     public Vector2[] boxPosition
@@ -50,118 +168,15 @@ public class Obstructer
         }
     }
 
-    private Vector2 m_Size = Vector2.zero;
-    public Vector2 size
-    {
-        get
-        {
-            if (m_Size == Vector2.zero)
-            {
-                Vector2[] curBoxPosition = boxPosition;
-                float width = curBoxPosition[1].x - curBoxPosition[0].x;
-                float height = curBoxPosition[0].y - curBoxPosition[1].y;
-
-                m_Size = new Vector2(Mathf.Abs(width), Mathf.Abs(height));
-            }
-
-            return m_Size;
-        }
-    }
-
-    private Vector2 m_Radius = Vector2.zero;
-    public Vector2 radius
-    {
-        get
-        {
-            if (m_Radius == Vector2.zero)
-            {
-                 m_Radius = size / 2;
-            }
-
-            return m_Radius;
-        }
-    }
-
     public Rect rect
     {
         get
         {
-            Vector2 position = transform.position + new Vector3(-radius.x, +radius.y);
+            Vector2[] curBoxPosition = boxPosition;
+            Rect curRect = new Rect(transform.position,
+                new Vector2(Mathf.Abs(curBoxPosition[1].x - curBoxPosition[0].x), Mathf.Abs(curBoxPosition[0].y - curBoxPosition[1].y)));
 
-            return new Rect(position, m_Size);
-        }
-    }
-
-    public Vector2 min
-    {
-        get
-        {
-            Vector2 position = transform.position + new Vector3(-radius.x, +radius.y);
-
-            return position;
-        }
-    }
-
-    public Vector2 max
-    {
-        get
-        {
-            Vector2 position = transform.position + new Vector3(radius.x, -radius.y);
-
-            return position;
-        }
-    }
-
-    public Vector2 center
-    {
-        get
-        {
-            return transform.position;
-        }
-    }
-
-    public line[] boxLines
-    {
-        get
-        {
-            Vector2 min = rect.position;
-            Vector2 max = rect.position + new Vector2(size.x, -size.y);
-
-            line[] lines = new line[]
-            {
-                new line(min, size.x, 0),
-                new line(min, 0, -size.y),
-                new line(max, -size.x, 0),
-                new line(max, 0, size.y),
-
-            };
-
-            return lines;
-        }
-    }
-
-    public bool Overlaps(Obstructer other)
-    {
-        Vector2 curMin = min;
-        Vector2 curMax = max;
-        Vector2 otherMin = other.min;
-        Vector2 otherMax = other.max;
-        
-        if ((otherMin.x >= curMin.x && otherMin.x <= curMax.x) && (otherMin.y <= min.y && otherMin.y >= max.y) ||
-            ((otherMax.x <= curMax.x && otherMax.x >= curMin.x) && (otherMax.y >= curMax.y && otherMax.y <= curMin.y)))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    public void DrawBox()
-    {
-        for (int index = 0; index < boxLines.Length; index++)
-        {
-            line curLine = boxLines[index];
-            Debug.DrawLine(curLine.start, curLine.end, Color.blue);
+            return curRect;
         }
     }
 }

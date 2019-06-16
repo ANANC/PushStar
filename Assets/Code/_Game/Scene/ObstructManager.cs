@@ -8,12 +8,12 @@ using UnityEngine;
 public class ObstructManager : BaseManager
 {
     private Obstructer m_Player;
-    private List<Rect> m_BuildingRectList;
+    private List<Obstructer.Rect> m_BuildingRectList;
     private List<Obstructer> m_ObstructList = new List<Obstructer>();
     private List<Obstructer> m_AllObstructList = new List<Obstructer>();
 
-    private List<Rect> m_SceneObstructRectList = new List<Rect>(1024);
-    public List<Rect> obstructs
+    private List<Obstructer.Rect> m_SceneObstructRectList = new List<Obstructer.Rect>(1024);
+    public List<Obstructer.Rect> obstructRects
     {
         get
         {
@@ -23,7 +23,7 @@ public class ObstructManager : BaseManager
             {
                 m_SceneObstructRectList.Add(m_ObstructList[i].rect);
             }
-
+            
             return m_SceneObstructRectList;
         }
     }
@@ -37,11 +37,11 @@ public class ObstructManager : BaseManager
     {
 #if DRAWDEBUG
 
-        m_Player.DrawBox();
+        m_Player.rect.DrawBox();
 
         for (int index = 0; index < m_AllObstructList.Count; index++)
         {
-            m_AllObstructList[index].DrawBox();
+            m_AllObstructList[index].rect.DrawBox();
         }
 #endif
     }
@@ -54,7 +54,7 @@ public class ObstructManager : BaseManager
         Buildinger buildinger = building.GetComponent<Buildinger>();
 
         List<Obstructer> staticBuildings = buildinger.GetStaticBuildingsObstructer();
-        m_BuildingRectList = new List<Rect>(staticBuildings.Count);
+        m_BuildingRectList = new List<Obstructer.Rect>(staticBuildings.Count);
         for (int i = 0; i < staticBuildings.Count; i++)
         {
             AddObstructer(staticBuildings[i], true);
@@ -72,7 +72,7 @@ public class ObstructManager : BaseManager
     public CharacterObject AddPlayer(GameDefine.Camp camp, Vector2 position)
     {
         CharacterObject characterObject = CreateCharacterObject(camp, position);
-        MoveController moveController = new MoveController(characterObject.transform.rectTransform());
+        MoveController moveController = new MoveController(characterObject);
         characterObject.SetMoveController(moveController);
         m_Player = characterObject;
 

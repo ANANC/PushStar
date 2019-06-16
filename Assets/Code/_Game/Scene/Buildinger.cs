@@ -21,14 +21,14 @@ public class Buildinger : MonoBehaviour
         return buildings;
     }
 
-    public List<Rect> GetStaticBuildingsRect()
+    public List<Obstructer.Rect> GetStaticBuildingsRect()
     {
         if (BuildingList == null)
         {
-            return new List<Rect>();
+            return new List<Obstructer.Rect>();
         }
 
-        List<Rect> buildings = new List<Rect>(BuildingList.Count);
+        List<Obstructer.Rect> buildings = new List<Obstructer.Rect>(BuildingList.Count);
         for (int index = 0; index < BuildingList.Count; index++)
         {
             buildings.Add(new Obstructer(BuildingList[index]).rect);
