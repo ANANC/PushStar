@@ -2,19 +2,20 @@
 using UnityEngine;
 public class MoveController 
 {
-    private float m_Speed;
-    private Obstructer m_MyObstructer;
+    private Obstructer m_Obstructer;
     private List<Obstructer.Rect> m_BoxRects;
-    private Obstructer.Rect m_MyRect;
+    private Obstructer.Rect m_PlayerRect;
+    private float m_Speed;
     private Obstructer.Rect m_OveRect;
+    private Obstructer.Rect[] m_SideRects;
 
-    private Obstructer.line m_DetectLine;
+    private Obstructer.line[] m_SideLines;
 
     public MoveController(Obstructer target)
     {
-        m_MyObstructer = target;
+        m_Obstructer = target;
+        m_BoxRects = App.manager.obstructMgr.obstructRects;
         m_Speed = GameDefine.MoveSpeed;
-
         //摇杆
         ETCJoystick etcJoystick = ETCInput.GetControlJoystick("Joystick");
         etcJoystick.onMove.AddListener(JoystickMove);
@@ -23,139 +24,140 @@ public class MoveController
     {
         if (vec != Vector2.zero)
         {
-            Move(m_Speed*vec);
+            Move(m_Speed * vec);
         }
     }
     private void Move(Vector2 dir)
     {
+        if (dir == Vector2.zero)
+        {
+            return;
+        }
+
         Vector2 absDir = new Vector2(Mathf.Abs(dir.x), Mathf.Abs(dir.y));
-        Vector2 normalizedDir = dir.normalized;
         //使用归一化的方向值
-        Vector2 speed = normalizedDir;
+        Vector2 speed = dir.normalized;
         speed.x = absDir.x < 1 ? dir.x : speed.x;
         speed.y = absDir.y < 1 ? dir.y : speed.y;
         Vector2 absSpeed = new Vector2(Mathf.Abs(speed.x), Mathf.Abs(speed.y));
         Vector2 curMove = Vector2.zero;
 
-        Obstructer.Rect curRect=  m_MyObstructer.rect;
-        m_MyRect = curRect;
-
+        Obstructer.Rect curRect =  m_Obstructer.rect;
+        m_PlayerRect = curRect;
+        
         while (curMove.x <= absDir.x && curMove.y <= absDir.y)
         {
-            Go(speed, normalizedDir);
+            Go(speed);
             curMove += absSpeed;
         }
 
-        m_MyObstructer.transform.position += new Vector3(m_MyRect.position.x - curRect.position.x, m_MyRect.position.y - curRect.position.y);
+        Vector2 position = m_PlayerRect.position - curRect.position;
+        m_Obstructer.transform.position += new Vector3(position.x, position.y);
     }
 
-    private void Go(Vector2 dir, Vector2 normalizedDir)
+    private void Go(Vector2 dir)
     {
         //偏移值
-        m_MyRect.position += dir;
-        //世界坐标
+        m_PlayerRect.position += dir;
+
         Vector2 newDir = Vector2.zero;
-        m_BoxRects = App.manager.obstructMgr.obstructRects;
         for (var index = 0; index < m_BoxRects.Count; index++)
         {
-            newDir = CheckBoxLine(m_BoxRects[index], dir, normalizedDir);
+            newDir = CheckBoxLine(m_BoxRects[index], dir);
             if (newDir != Vector2.zero)
             {
                 break;
             }
         }
 
-        m_MyRect.position += newDir;
-
-        dir += newDir;
-
         //修正位置直到没有发生碰撞
         if (newDir != Vector2.zero)
         {
-            Go(dir, dir.normalized);
+            m_PlayerRect.position += newDir;
+            Go(dir + newDir);
         }
     }
 
-    private Vector2 CheckBoxLine(Obstructer.Rect boxRect, Vector2 dir, Vector2 normalizedDir)
+    private Vector2 CheckBoxLine(Obstructer.Rect boxRect, Vector2 dir)
     {
         Vector2 newDir = Vector2.zero;
-        if (!boxRect.Overlaps(m_MyRect))
+        if (!boxRect.Overlaps(m_PlayerRect))
         {
             return newDir;
         }
-
         GetOverRectLine(boxRect);
-        
+        float maxValue = m_OveRect.width > m_OveRect.height ? m_OveRect.width : m_OveRect.height;
         //检测线段
-        float maxValue =(m_OveRect.width > m_OveRect.height ? m_OveRect.width : m_OveRect.height);
-        Obstructer.line dirLine = new Obstructer.line(m_OveRect.center - dir * maxValue *0.5f, dir.x * maxValue, dir.y * maxValue);
-        Obstructer.line[] boxLines = boxRect.boxLines;
-
-        for (int index = 0; index < boxLines.Length; index++)
+        Obstructer.line[] dirLines = new Obstructer.line[]
         {
-            if (IsRectCross(boxLines[index], dirLine))
+            new  Obstructer.line(m_OveRect.center-dir*(maxValue/2f), dir.x * maxValue, dir.y * maxValue)
+        };
+        bool over = false;
+        for (int dirIndex = 0; dirIndex < dirLines.Length; dirIndex++)
+        {
+            if (over)
             {
-                //得到相交矩形的非相交轴的长度
-                if (index < 2)
-                {
-                    newDir.y = (dir.y > 0 ? -1 : 1) * (m_OveRect.height);
-                }
-                else
-                {
-                    newDir.x = (dir.x > 0 ? -1 : 1) * (m_OveRect.width);
-                }
-
                 break;
+            }
+            for (int index = 0; index < m_SideLines.Length; index++)
+            {
+                if (IsRectCross(m_SideLines[index], dirLines[dirIndex]))
+                {
+                    //得到相交矩形的非相交轴的长度
+                    if (index < 2)
+                    {
+                        newDir.y = (dir.y > 0 ? -1 : 1) * (m_OveRect.height);
+                    }
+                    else
+                    {
+                        newDir.x = (dir.x > 0 ? -1 : 1) * (m_OveRect.width);
+                    }
+                    over = true;
+                    break;
+                }
             }
         }
 
         return newDir;
     }
 
-    private void GetOverRectLine(Obstructer.Rect boxObstructer)
+    private void GetOverRectLine(Obstructer.Rect boxRect)
     {
-        Vector2 minPos = m_MyRect.min;
-        Vector2 maxPos = m_MyRect.max;
+        Vector2 minPos = m_PlayerRect.min;
+        Vector2 maxPos = m_PlayerRect.max;
 
-        Vector2 boxMin = boxObstructer.min;
-        Vector2 boxMax = boxObstructer.max;
+        Vector2 boxMinPos = boxRect.min;
+        Vector2 boxMaxPos = boxRect.max;
 
-        if (minPos.x < boxMin.x)
+        if (boxMinPos.x > minPos.x)
         {
-            minPos.x = boxMin.x;
+            minPos.x = boxMinPos.x;
         }
-
-        if (maxPos.x > boxMax.x)
+        if (boxMaxPos.x < maxPos.x)
         {
-            maxPos.x = boxMax.x;
+            maxPos.x = boxMaxPos.x;
         }
-
-        if (minPos.y > boxMin.y)
+        if (boxMinPos.y < minPos.y)
         {
-            minPos.y = boxMin.y;
+            minPos.y = boxMinPos.y;
         }
-
-        if (maxPos.y < boxMax.y)
+        if (boxMaxPos.y > maxPos.y)
         {
-            maxPos.y = boxMax.y;
+            maxPos.y = boxMaxPos.y;
         }
-        
-        float width = Mathf.Abs(maxPos.x - minPos.x) + 0.02f;
-        float height = Mathf.Abs(minPos.y - maxPos.y) + 0.02f;
-
-        Vector2 size = new Vector2(width, height);
-        minPos += new Vector2(size.x, -size.y)/2;
 
         //得到相交矩形
-        m_OveRect = new Obstructer.Rect(minPos, size);
+        Vector2 size = new Vector2(Mathf.Abs(maxPos.x - minPos.x) + 0.02f,Mathf.Abs(minPos.y - maxPos.y)+0.02f);
+        m_OveRect = new Obstructer.Rect(minPos + new Vector2(size.x,-size.y)/2, size);
+
+        //场景碰撞盒的四条边
+        m_SideLines = boxRect.boxLines;
 
 #if DRAWDEBUG
-        m_OveRect.DrawBox(Color.yellow);
-       // Debug.Break();
+        m_OveRect.DrawBox(Color.blue);
 #endif
 
     }
-
     //计算线段是否相交
     private bool IsRectCross(Obstructer.line p1, Obstructer.line p2)
     {
@@ -173,13 +175,14 @@ public class MoveController
         }
 
 #if DRAWDEBUG
-
-        Debug.DrawLine(p1.start, p1.end, IsCross ? Color.green : Color.red);
-        Debug.DrawLine(p2.start, p2.end, IsCross ? Color.black : Color.red);
-
-        //Debug.Break();
+        Debug.DrawLine(p1.start,p1.end, IsCross?Color.red:Color.green);
+        Debug.DrawLine(p2.start, p2.end, Color.yellow);
+        if (IsCross)
+        {
+            Debug.Break();
+        }
 #endif
+
         return IsCross;
     }
-    
 }

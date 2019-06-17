@@ -108,19 +108,43 @@ public class Obstructer
             Vector2 otherMax = other.max;
 
 
-            if (((otherMin.x >= curMin.x && otherMin.x <= curMax.x) && (otherMin.y <= min.y && otherMin.y >= max.y)) ||
-                ((otherMax.x <= curMax.x && otherMax.x >= curMin.x) &&
-                 (otherMax.y >= curMax.y && otherMax.y <= curMin.y)))
+            //todo:断点看一下，有问题
+            if (otherMin.x > curMin.x)
+            {
+                curMin.x = otherMin.x;
+            }
+            if (otherMax.x < curMax.x)
+            {
+                curMax.x = otherMax.x;
+            }
+            if (otherMin.y < curMin.y)
+            {
+                curMin.y = otherMin.y;
+            }
+            if (otherMax.y > curMax.y)
+            {
+                curMax.y = otherMax.y;
+            }
+            
+            
+            if (curMin.x < curMax.x && otherMin.y > otherMax.y)
             {
                 return true;
             }
+
+
+            //if (((otherMin.x >= curMin.x && otherMin.x <= curMax.x) && (otherMin.y <= min.y && otherMin.y >= max.y)) ||
+            //    ((otherMax.x <= curMax.x && otherMax.x >= curMin.x) && (otherMax.y >= curMax.y && otherMax.y <= curMin.y)) )
+            //{
+            //    return true;
+            //}
 
             return false;
         }
 
         public void DrawBox()
         {
-            DrawBox(Color.blue);
+            DrawBox(Color.black);
         }
 
         public void DrawBox(Color color)
