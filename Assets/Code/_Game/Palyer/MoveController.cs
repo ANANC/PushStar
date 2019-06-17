@@ -9,7 +9,6 @@ public class MoveController
     private Obstructer.Rect m_OveRect;
 
     private Obstructer.line m_DetectLine;
-    private Obstructer.line[] m_SideLines;
 
     public MoveController(Obstructer target)
     {
@@ -79,8 +78,6 @@ public class MoveController
 
     private Vector2 CheckBoxLine(Obstructer.Rect boxRect, Vector2 dir, Vector2 normalizedDir)
     {
-       // Rect boxRect = boxObstructer.rect;
-
         Vector2 newDir = Vector2.zero;
         if (!boxRect.Overlaps(m_MyRect))
         {
@@ -90,12 +87,13 @@ public class MoveController
         GetOverRectLine(boxRect);
         
         //检测线段
-        float maxValue =(m_MyRect.width > m_MyRect.height ? m_MyRect.width : m_MyRect.height);
-        Obstructer.line dirLines = new Obstructer.line(m_OveRect.center - normalizedDir * maxValue *0.5f, normalizedDir.x * maxValue, normalizedDir.y * maxValue);
+        float maxValue =(m_OveRect.width > m_OveRect.height ? m_OveRect.width : m_OveRect.height);
+        Obstructer.line dirLine = new Obstructer.line(m_OveRect.center - dir * maxValue *0.5f, dir.x * maxValue, dir.y * maxValue);
+        Obstructer.line[] boxLines = boxRect.boxLines;
 
-        for (int index = 0; index < m_SideLines.Length; index++)
+        for (int index = 0; index < boxLines.Length; index++)
         {
-            if (IsRectCross(m_SideLines[index], dirLines))
+            if (IsRectCross(boxLines[index], dirLine))
             {
                 //得到相交矩形的非相交轴的长度
                 if (index < 2)
@@ -141,7 +139,7 @@ public class MoveController
         {
             maxPos.y = boxMax.y;
         }
-
+        
         float width = Mathf.Abs(maxPos.x - minPos.x) + 0.02f;
         float height = Mathf.Abs(minPos.y - maxPos.y) + 0.02f;
 
@@ -156,8 +154,6 @@ public class MoveController
        // Debug.Break();
 #endif
 
-        //场景碰撞盒的四条边
-        m_SideLines = boxObstructer.boxLines;
     }
 
     //计算线段是否相交

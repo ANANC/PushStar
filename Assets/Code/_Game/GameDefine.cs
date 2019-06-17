@@ -7,7 +7,7 @@ public static class GameDefine
 {
     //*--- 角色 ---*/
     public static float CharacterObjectMaxHp = 100;
-    public static float MoveSpeed = 1f;
+    public static float MoveSpeed = 0.5f;
 
     public enum Camp //颜色类型
     {
