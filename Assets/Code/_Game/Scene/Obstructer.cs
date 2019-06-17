@@ -12,6 +12,12 @@ public class Obstructer
             this.start = start;
             this.end = start + new Vector2(width,height);
         }
+
+        public line(Vector2 start, Vector2 end)
+        {
+            this.start = start;
+            this.end = end;
+        }
     }
 
     public struct Rect
@@ -52,7 +58,7 @@ public class Obstructer
             get { return m_Size; }
             set
             {
-                m_Size = size;
+                m_Size = value;
                 m_Radius = m_Size / 2;
                 m_Width = m_Size.x;
                 m_Height = m_Size.y;
@@ -65,12 +71,12 @@ public class Obstructer
             set { size = value * 2; }
         }
 
-        public Vector2 min
+        public Vector2 topAndLeft
         {
             get { return m_Position + new Vector2(-m_Radius.x, m_Radius.y); }
         }
 
-        public Vector2 max
+        public Vector2 bottomAndRight
         {
             get { return m_Position + new Vector2(m_Radius.x, -m_Radius.y); }
         }
@@ -80,64 +86,64 @@ public class Obstructer
             get { return m_Position; }
         }
 
+
         public line[] boxLines
         {
             get
             {
-                Vector2 curMin = min;
-                Vector2 curMax = max;
+                Vector2 curMin = topAndLeft;
+                Vector2 curMax = bottomAndRight;
 
+                //[0]:xTop
+                //[1]:xBottom
+                //[2]:yLeft
+                //[3]:yRight 
+                //该顺序用于MoveController的检测判断，不可乱改
                 line[] lines = new line[]
                 {
                     new line(curMin, m_Size.x, 0),
                     new line(curMax, -m_Size.x, 0),
                     new line(curMin, 0, -m_Size.y),
                     new line(curMax, 0, m_Size.y),
-
                 };
 
                 return lines;
             }
         }
 
-        public bool Overlaps(Rect other)
+        public bool Overlaps(Rect other,out Rect overRect)
         {
-            Vector2 curMin = min;
-            Vector2 curMax = max;
-            Vector2 otherMin = other.min;
-            Vector2 otherMax = other.max;
+            overRect = new Rect();
 
-
-            //todo:断点看一下，有问题
-            if (otherMin.x > curMin.x)
+            Vector2 overMin = topAndLeft;
+            Vector2 overMax = bottomAndRight;
+            Vector2 otherMin = other.topAndLeft;
+            Vector2 otherMax = other.bottomAndRight;
+            
+            if (otherMin.x > overMin.x)
             {
-                curMin.x = otherMin.x;
+                overMin.x = otherMin.x;
             }
-            if (otherMax.x < curMax.x)
+            if (otherMax.x < overMax.x)
             {
-                curMax.x = otherMax.x;
+                overMax.x = otherMax.x;
             }
-            if (otherMin.y < curMin.y)
+            if (otherMin.y < overMin.y)
             {
-                curMin.y = otherMin.y;
+                overMin.y = otherMin.y;
             }
-            if (otherMax.y > curMax.y)
+            if (otherMax.y > overMax.y)
             {
-                curMax.y = otherMax.y;
+                overMax.y = otherMax.y;
             }
             
-            
-            if (curMin.x < curMax.x && otherMin.y > otherMax.y)
+            if (overMin.x < overMax.x && overMin.y > overMax.y)
             {
+                Vector2 size = new Vector2(Mathf.Abs(  overMax.x- overMin.x),Mathf.Abs(overMin.y - overMax.y));
+                overRect.position = overMin + new Vector2(size.x, -size.y) / 2;
+                overRect.size = size;
                 return true;
             }
-
-
-            //if (((otherMin.x >= curMin.x && otherMin.x <= curMax.x) && (otherMin.y <= min.y && otherMin.y >= max.y)) ||
-            //    ((otherMax.x <= curMax.x && otherMax.x >= curMin.x) && (otherMax.y >= curMax.y && otherMax.y <= curMin.y)) )
-            //{
-            //    return true;
-            //}
 
             return false;
         }
