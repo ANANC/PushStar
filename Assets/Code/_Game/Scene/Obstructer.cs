@@ -76,6 +76,11 @@ public class Obstructer
             get { return m_Position + new Vector2(-m_Radius.x, m_Radius.y); }
         }
 
+        public Vector2 bottomAndLeft
+        {
+            get { return m_Position + new Vector2(-m_Radius.x, -m_Radius.y); }
+        }
+
         public Vector2 bottomAndRight
         {
             get { return m_Position + new Vector2(m_Radius.x, -m_Radius.y); }

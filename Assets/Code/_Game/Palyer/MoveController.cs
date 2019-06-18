@@ -18,7 +18,6 @@ public class MoveController
     public MoveController(Obstructer target)
     {
         m_Obstructer = target;
-        m_BoxRects = App.manager.obstructMgr.obstructRects;
         m_Speed = GameDefine.MoveSpeed;
         //摇杆
         ETCJoystick etcJoystick = ETCInput.GetControlJoystick("Joystick");
@@ -39,6 +38,8 @@ public class MoveController
         {
             return;
         }
+
+        m_BoxRects = App.manager.obstructMgr.obstructRects;
 
         Vector2 absDir = new Vector2(Abs(dir.x), Abs(dir.y));
         //使用归一化的方向值
@@ -107,11 +108,11 @@ public class MoveController
                 //得到相交矩形的非相交轴的长度
                 if (index < 2)
                 {
-                    newDir.y = (dir.y > 0 ? -1 : 1) * m_OveRect.height;
+                    newDir.y = (dir.y > 0 ? -1 : 1) * (m_OveRect.height + 0.01f);
                 }
                 else
                 {
-                    newDir.x = (dir.x > 0 ? -1 : 1) * m_OveRect.width;
+                    newDir.x = (dir.x > 0 ? -1 : 1) * (m_OveRect.width + 0.01f);
                 }
 
                 return true;
@@ -121,14 +122,13 @@ public class MoveController
         return false;
     }
 
-    //todo:向左移动有问题
     //计算线段是否相交
     private bool IsRectCross(Obstructer.line p1, Obstructer.line p2)
     {
         bool IsCross = !(Mathf.Max(p1.start.x, p1.end.x) < Mathf.Min(p2.start.x, p2.end.x) ||
                          Mathf.Max(p1.start.y, p1.end.y) < Mathf.Min(p2.start.y, p2.end.y) ||
                          Mathf.Max(p2.start.x, p2.end.x) < Mathf.Min(p1.start.x, p1.end.x) ||
-                         Mathf.Max(p2.start.y, p2.end.y) < Mathf.Min(p1.start.y, p1.start.y));
+                         Mathf.Max(p2.start.y, p2.end.y) < Mathf.Min(p1.start.y, p1.end.y));
         if (IsCross)
         {
             if ((((p1.start.x - p2.start.x) * (p2.end.y - p2.start.y) -
