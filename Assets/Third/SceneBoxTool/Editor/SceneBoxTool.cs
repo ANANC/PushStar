@@ -9,7 +9,7 @@ public class SceneBoxTool : EditorWindow
     private Transform m_BoxRoot;
     private Buildinger m_Buildinger;
 
-    [MenuItem("Tool/SceneBoxTool")]
+    [MenuItem("Tools/SceneBoxTool")]
     private static void Open()
     {
         EditorWindow.GetWindow<SceneBoxTool>();
