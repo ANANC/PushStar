@@ -162,7 +162,7 @@ public class ObjectSortHelper : EditorWindow
         gameObject.transform.SetParent(rooTransform);
         for (int index = 0; index < floor; index++)
         {
-            CreateCube(gameObject.transform, cakeMaterial, new Vector3(0, -floorHight * index),
+            CreateCube(gameObject.transform, cakeMaterial, new Vector3(0, -floorHight * index, 0),
                 new Vector3(cakeSize.x, 1, cakeSize.y));
         }
 
@@ -170,22 +170,25 @@ public class ObjectSortHelper : EditorWindow
         gameObject.transform.SetParent(rooTransform);
 
         Vector2 size = cellSize + space;
-        for (int index = 0,id = 0; index < floor - 1; index++)
+        for (int index = 0, id = 0; index < floor - 1; index++)
         {
-            Vector3 initPos = new Vector3((-(cakeSize.x - side.x)) / 2, -floorHight * index);
+            Vector3 initPos = cakeSize / 2 - side;
             for (int h = 0; h < sort.y; h++)
             {
-                for (int w = 0; w < sort.x; w++,id++)
+                for (int w = 0; w < sort.x; w++, id++)
                 {
                     List<MeshRenderer> meshRendererList = new List<MeshRenderer>();
                     if (index == 0)
                     {
                         CreateCube(gameObject.transform, pillarEmptyMaterial,
-                            initPos + new Vector3(size.x * w, 0.1f, size.y * h), new Vector3(size.x,1, size.y), meshRendererList);
+                            new Vector3(initPos.x - (side.x + size.x) * w, -floorHight * index + 0.1f, initPos.y - (side.y + size.y) * h),
+                            new Vector3(size.x, 1, size.y),
+                            meshRendererList);
                     }
 
                     CreateCube(gameObject.transform, pillarEmptyMaterial,
-                        initPos + new Vector3(size.x * w, -floorHight + 0.1f, size.y * h), new Vector3(size.x, 1, size.y),
+                        new Vector3(initPos.x - (side.x+ size.x) * w, -floorHight * index + 0.1f, initPos.y - (side.y +size.y)* h),
+                        new Vector3(size.x, 1, size.y),
                         meshRendererList);
 
                     UpdateMeshRenderers(pillarDatas[id], meshRendererList);
@@ -195,7 +198,7 @@ public class ObjectSortHelper : EditorWindow
         }
     }
 
-   
+
 
     private void UpdateTargetPillar(int id, PillarType pillarType)
     {
